@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Лабораторна робота 13</title>
+
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f2f4f8;
+        color: #222;
+      }
+
+      .app {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 30px;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      h2 {
+        margin-top: 0;
+      }
+
+      .section {
+        background: white;
+        padding: 25px;
+        margin-bottom: 30px;
+        border-radius: 14px;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+      }
+
+      input {
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #bbb;
+        border-radius: 8px;
+      }
+
+      button {
+        padding: 10px 16px;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        background: #2563eb;
+        color: white;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #1d4ed8;
+      }
+
+      form {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      ul {
+        padding: 0;
+        list-style: none;
+      }
+
+      .task-item,
+      .contact-item {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .task-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .counter-box {
+        text-align: center;
+      }
+
+      .counter-value {
+        font-size: 60px;
+        font-weight: bold;
+        color: #2563eb;
+        margin: 20px 0;
+      }
+
+      .counter-value.red {
+        color: red;
+      }
+
+      .counter-controls {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 15px;
+      }
+
+      .movies-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 20px;
+      }
+
+      .movie-card {
+        background: #f8fafc;
+        padding: 15px;
+        border-radius: 12px;
+        text-align: center;
+      }
+
+      .movie-card img {
+        width: 100%;
+        height: 260px;
+        object-fit: cover;
+        border-radius: 8px;
+        background: #ddd;
+      }
+
+      .movie-card h3 {
+        margin: 12px 0 5px;
+        font-size: 18px;
+      }
+
+      .contact-item h3 {
+        margin: 0 0 6px;
+      }
+
+      .contact-item p {
+        margin: 0;
+        color: #555;
+      }
+
+      @media (max-width: 600px) {
+        .app {
+          padding: 15px;
+        }
+
+        form {
+          flex-direction: column;
+        }
+
+        input,
+        button {
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .task-item {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState } = React;
+
+      function TaskItem({ task, onToggle, onDelete }) {
+        return (
+          <li className="task-item">
+            <span
+              style={{ textDecoration: task.completed ? "line-through" : "none" }}
+              onClick={() => onToggle(task.id)}
+            >
+              {task.text}
+            </span>
+
+            <button onClick={() => onDelete(task.id)}>Видалити</button>
+          </li>
+        );
+      }
+
+      function TaskForm({ addTask }) {
+        const [text, setText] = useState("");
+
+        const handleSubmit = (event) => {
+          event.preventDefault();
+
+          if (text.trim() === "") {
+            return;
+          }
+
+          addTask(text);
+          setText("");
+        };
+
+        return (
+          <form onSubmit={handleSubmit}>
+            <input
+              type="text"
+              placeholder="Нове завдання..."
+              value={text}
+              onChange={(event) => setText(event.target.value)}
+            />
+            <button type="submit">Додати</button>
+          </form>
+        );
+      }
+
+      function TodoList() {
+        const [tasks, setTasks] = useState([]);
+
+        const addTask = (text) => {
+          const newTask = {
+            id: Date.now(),
+            text: text,
+            completed: false
+          };
+
+          setTasks([...tasks, newTask]);
+        };
+
+        const toggleTask = (id) => {
+          setTasks(
+            tasks.map((task) =>
+              task.id === id ? { ...task, completed: !task.completed } : task
+            )
+          );
+        };
+
+        const deleteTask = (id) => {
+          setTasks(tasks.filter((task) => task.id !== id));
+        };
+
+        return (
+          <div className="section">
+            <h2>To-Do List</h2>
+            <TaskForm addTask={addTask} />
+
+            <ul>
+              {tasks.map((task) => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  onToggle={toggleTask}
+                  onDelete={deleteTask}
+                />
+              ))}
+            </ul>
+          </div>
+        );
+      }
+
+      function Counter() {
+        const [count, setCount] = useState(0);
+        const [step, setStep] = useState(1);
+
+        const increaseCount = () => {
+          setCount(count + Number(step));
+        };
+
+        const decreaseCount = () => {
+          const result = count - Number(step);
+
+          if (result < 0) {
+            setCount(0);
+          } else {
+            setCount(result);
+          }
+        };
+
+        return (
+          <div className="section counter-box">
+            <h2>Завдання 1. Віджет лічильника</h2>
+
+            <div className={count >= 50 ? "counter-value red" : "counter-value"}>
+              {count}
+            </div>
+
+            <input
+              type="number"
+              min="1"
+              value={step}
+              onChange={(event) => setStep(event.target.value)}
+              placeholder="Крок"
+            />
+
+            <div className="counter-controls">
+              <button onClick={decreaseCount}>-</button>
+              <button onClick={increaseCount}>+</button>
+            </div>
+          </div>
+        );
+      }
+
+      function MovieCard({ movie }) {
+        return (
+          <div className="movie-card">
+            <img
+              src={movie.image || "https://via.placeholder.com/210x295?text=No+Image"}
+              alt={movie.title}
+            />
+            <h3>{movie.title}</h3>
+            <p>Рік: {movie.year || "Невідомо"}</p>
+          </div>
+        );
+      }
+
+      function MovieFinder() {
+        const [searchText, setSearchText] = useState("");
+        const [movies, setMovies] = useState([]);
+
+        const searchMovies = async (event) => {
+          event.preventDefault();
+
+          if (searchText.trim() === "") {
+            return;
+          }
+
+          const response = await fetch(
+            `https://api.tvmaze.com/search/shows?q=${searchText}`
+          );
+
+          const data = await response.json();
+
+          const movieList = data.map((item) => ({
+            id: item.show.id,
+            title: item.show.name,
+            year: item.show.premiered ? item.show.premiered.slice(0, 4) : null,
+            image: item.show.image ? item.show.image.medium : null
+          }));
+
+          setMovies(movieList);
+        };
+
+        return (
+          <div className="section">
+            <h2>Завдання 4. Пошуковик фільмів</h2>
+
+            <form onSubmit={searchMovies}>
+              <input
+                type="text"
+                placeholder="Введіть назву фільму..."
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+              />
+              <button type="submit">Пошук</button>
+            </form>
+
+            <div className="movies-grid">
+              {movies.map((movie) => (
+                <MovieCard key={movie.id} movie={movie} />
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      function SearchBar({ searchTerm, setSearchTerm }) {
+        return (
+          <input
+            type="text"
+            placeholder="Пошук контакту..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+        );
+      }
+
+      function ContactList() {
+        const [searchTerm, setSearchTerm] = useState("");
+
+        const contacts = [
+          { id: 1, name: "Олександр Коваленко", phone: "+380 67 123 45 67" },
+          { id: 2, name: "Марія Шевченко", phone: "+380 50 456 78 90" },
+          { id: 3, name: "Андрій Мельник", phone: "+380 93 222 33 44" },
+          { id: 4, name: "Ірина Бондар", phone: "+380 63 777 88 99" },
+          { id: 5, name: "Дмитро Савченко", phone: "+380 98 111 22 33" }
+        ];
+
+        const filteredContacts = contacts.filter((contact) =>
+          contact.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        return (
+          <div className="section">
+            <h2>Завдання 10. Фільтрація контактної книги</h2>
+
+            <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+
+            <ul>
+              {filteredContacts.map((contact) => (
+                <li key={contact.id} className="contact-item">
+                  <h3>{contact.name}</h3>
+                  <p>{contact.phone}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      }
+
+      function App() {
+        return (
+          <div className="app">
+            <h1>Лабораторна робота 13. React</h1>
+            <TodoList />
+            <Counter />
+            <MovieFinder />
+            <ContactList />
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>
